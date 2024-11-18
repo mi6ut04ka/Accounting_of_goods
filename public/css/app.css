@@ -1,0 +1,65 @@
+*{
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+@font-face {
+    font-family: 'Brilliant';
+    src: url('/fonts/Brilliant.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+.product-image {
+    width: 100%; /* фиксированная ширина */
+    height: 260px; /* фиксированная высота */
+    object-fit: cover; /* сохраняет пропорции изображения внутри фиксированной области */
+    border-radius: 8px; /* необязательно, делает углы закругленными */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* декоративная тень */
+    overflow: hidden;
+}
+.stretched-link-hover {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.stretched-link-hover:hover {
+    text-decoration: underline;
+}
+.card-wrapper {
+    position: relative;
+}
+.hover-info{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    border-radius: 4px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 10;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+.info-content h5 {
+    margin: 0 0 10px;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.info-content p {
+    margin: 0 0 5px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+
+
