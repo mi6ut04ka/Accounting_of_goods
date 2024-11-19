@@ -1,25 +1,28 @@
-FROM php:8.2-fpm
+# Используем официальный образ PHP с установленными зависимостями
+FROM php:8.1-fpm
 
-COPY ./php.ini /usr/local/etc/php/
+# Устанавливаем зависимости
+RUN apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev git zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd pdo pdo_mysql
 
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libpq-dev \
-    && docker-php-ext-install pdo_mysql
+# Устанавливаем Composer (менеджер зависимостей для PHP)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
-
+# Устанавливаем рабочую директорию
 WORKDIR /var/www
 
+# Копируем файлы из директории проекта в контейнер
 COPY . .
 
-RUN composer install --no-scripts --no-autoloader
+# Устанавливаем зависимости Laravel
+RUN composer install
 
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Разрешаем доступ к папке storage и bootstrap/cache
+RUN chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
-RUN php artisan key:generate
+# Экспонируем порт
+EXPOSE 9000
 
-EXPOSE 8000
-
-CMD ["php", "artisan", "serve", "--port=8000", "--host=0.0.0.0"]
+# Запускаем PHP-FPM
+CMD ["php-fpm"]

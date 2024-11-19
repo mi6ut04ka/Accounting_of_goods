@@ -6,7 +6,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "caouecs/laravel-lang": "*",
         "doctrine/dbal": "^3.4",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/image": "^3.9",
@@ -15,7 +14,6 @@
         "laravel/tinker": "^2.8"
     },
     "require-dev": {
-        "barryvdh/laravel-ide-helper": "^3.1",
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
