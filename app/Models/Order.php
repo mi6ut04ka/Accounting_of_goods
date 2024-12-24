@@ -11,7 +11,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['customer_name', 'order_date', 'deadline_date', 'order_status', 'note'];
+    protected $fillable = ['customer_name', 'order_date', 'deadline_date', 'order_status', 'note', 'pay_status', 'order_number'];
 
     public function products(): BelongsToMany
     {
@@ -23,5 +23,10 @@ class Order extends Model
     public function sails(): HasMany
     {
         return $this->HasMany(Sale::class, 'order_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -26,6 +26,11 @@ trait HasProductAttributesGyps
         return $this->product->sold ?? 0;
     }
 
+    public function getDescriptionAttribute()
+    {
+        return $this->product->description ?? null;
+    }
+
     public function getInStockAttribute()
     {
         return $this->product->in_stock ?? 0;
