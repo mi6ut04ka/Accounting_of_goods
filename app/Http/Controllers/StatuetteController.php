@@ -18,11 +18,9 @@ class StatuetteController extends Controller
      */
     public function index(): View
     {
-        $currentPage = request()->get('page');
-
-        $perPage = ($currentPage == 1 || $currentPage === null) ? 11 : 12;
-
-        $statuettes = Statue::with('gypsumProduct.product')->paginate($perPage);
+        $statuettes = Statue::with('gypsumProduct.product')
+            ->orderBy('created_at', 'desc')
+            ->paginate(11);
         return view('products.statuettes.index', compact('statuettes'));
     }
 
@@ -40,7 +38,7 @@ class StatuetteController extends Controller
     public function store(Request $request): RedirectResponse
     {
         DB::transaction(function () use ($request) {
-            $product = Product::create($request->only('price', 'cost'));
+            $product = Product::create($request->only('price', 'cost', 'in_stock', 'description'));
             if($request->hasFile('photo')){
                 $this->handlePhotos($product, $request);
             }
@@ -81,7 +79,7 @@ class StatuetteController extends Controller
             if($request->hasFile('photo')){
                 $this->updatePhoto($statuette->gypsumProduct->product, $request->file('photo'));
             }
-            $statuette->gypsumProduct->product->update($request->only('price', 'cost'));
+            $statuette->gypsumProduct->product->update($request->only('price', 'cost', 'in_stock', 'description'));
             $statuette->update($request->only('statue_type', 'color', 'gypsum_weight'));
         });
         return redirect()->route('products.statuettes.index')->with(['success'=>'Успешно изменено']);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Traits\HandlesProductPhotos;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,6 +20,41 @@ class ProductController extends Controller
     {
         return view('products.index');
     }
+
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->input('query');
+
+        $products = Product::all()->filter(function ($product) use ($query) {
+            return str_contains(mb_strtolower($product->name), $query) == true;
+        })->take(10)
+            ->values()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'in_stock' => $product->in_stock,
+                ];
+        });
+
+        return response()->json($products);
+    }
+
+    public function updateStock(Request $request, $id): JsonResponse
+    {
+        $product = Product::findOrFail($id);
+
+        $validatedData = $request->validate([
+            'in_stock' => 'required|integer|min:0',
+        ]);
+
+        $product->in_stock = $validatedData['in_stock'];
+        $product->save();
+
+        return response()->json(['in_stock' => $product->in_stock]);
+    }
+
 
 
 
@@ -45,7 +81,9 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $product = Product::findorfail($id);
+        $product->set? $product->with('items'): '';
+        return view('products.show', compact('product'));
     }
 
     /**

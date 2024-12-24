@@ -1,9 +1,8 @@
 @props(['title' => '', 'link' => '', 'active' => false])
 
-<li class="nav-item w-100">
-    <button class="btn btn{{$active ? '' : '-outline' }}-secondary w-100">
-        <a class="nav-link text-center {{$active ? 'text-white' : '' }}" href="{{ $link }}">
-            {{ $title }}
-        </a>
-    </button>
+<li {{$attributes}} class="nav-item">
+    <a href="{{ $link }}"
+       class="btn btn{{$active ? '' : '-outline' }}-secondary text-center w-100 d-block py-2">
+        {{ $title }}
+    </a>
 </li>

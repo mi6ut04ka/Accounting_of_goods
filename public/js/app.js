@@ -21,26 +21,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateHeader = document.getElementById('date-header');
 
     // Обработчик клика на заголовок для сортировки
-    dateHeader.addEventListener('click', function() {
-        // Переключаем порядок сортировки
-        sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    if (dateHeader){
+        dateHeader.addEventListener('click', function() {
+            // Переключаем порядок сортировки
+            sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
 
-        // Обновляем иконку сортировки
-        sortIcon.textContent = sortOrder === 'desc' ? '↓' : '↑';
+            // Обновляем иконку сортировки
+            sortIcon.textContent = sortOrder === 'desc' ? '↓' : '↑';
 
-        // Получаем все строки таблицы
-        const rows = Array.from(document.querySelectorAll('#sales-table tbody tr'));
+            // Получаем все строки таблицы
+            const rows = Array.from(document.querySelectorAll('#sales-table tbody tr'));
 
-        // Сортируем строки
-        rows.sort((rowA, rowB) => {
-            const dateA = new Date(rowA.cells[4].textContent.split('.').reverse().join('-')); // Преобразуем дату в формат YYYY-MM-DD
-            const dateB = new Date(rowB.cells[4].textContent.split('.').reverse().join('-'));
-            return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            // Сортируем строки
+            rows.sort((rowA, rowB) => {
+                const dateA = new Date(rowA.cells[4].textContent.split('.').reverse().join('-')); // Преобразуем дату в формат YYYY-MM-DD
+                const dateB = new Date(rowB.cells[4].textContent.split('.').reverse().join('-'));
+                return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+            });
+
+            // Перезаписываем строки в таблице
+            const tbody = document.querySelector('#sales-table tbody');
+            rows.forEach(row => tbody.appendChild(row));
         });
+    }
 
-        // Перезаписываем строки в таблице
-        const tbody = document.querySelector('#sales-table tbody');
-        rows.forEach(row => tbody.appendChild(row));
-    });
 });
 

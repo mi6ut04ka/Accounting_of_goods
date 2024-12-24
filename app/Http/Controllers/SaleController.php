@@ -21,7 +21,7 @@ class SaleController extends Controller
      */
     public function create()
     {
-        //
+        return view('sales.create');
     }
 
     /**
@@ -29,26 +29,62 @@ class SaleController extends Controller
      */
     public function store(Request $request)
     {
-        $response = DB::transaction(function () use ($request) {
+        $validated = $request->validate([
+            'time_of_sale' => 'nullable|date',
+            'product_name' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric|min:0',
+            'quantity' => 'required|integer|min:1',
+            'product_id' => 'nullable|exists:products,id',
+        ]);
 
-            $product = Product::findOrFail($request->input('product_id'));
+        $response = DB::transaction(function () use ($validated) {
+            if (!empty($validated['product_id'])) {
+                $product = Product::findOrFail($validated['product_id']);
+                $quantity = $validated['quantity'];
 
-            if ($product->in_stock < $request->input('quantity')) {
-                return redirect()->back()->with('error', 'Недостаточно товара на складе.');
+                if ($product->set) {
+                    foreach ($product->set->items as $setItem) {
+                        if ($setItem->product_id && $setItem->product->in_stock < $setItem->quantity * $quantity) {
+                            return redirect()->back()->with('error', "Недостаточно товара '{$setItem->product->name}' для продажи набора '{$product->name}'.");
+
+                        }
+                    }
+
+                    foreach ($product->set->items as $setItem) {
+                        if ($setItem->product_id) {
+                            $setItem->product->decrementStock($setItem->quantity * $quantity);
+                        }
+                    }
+                    $product->decrementStock($quantity);
+                } else {
+
+                    if ($product->in_stock < $quantity) {
+                        return redirect()->back()->with('error', "Недостаточно товара '{$product->name}' на складе.");
+                    }
+                    $product->decrementStock($quantity);
+                }
+
+                DB::table('sales')->insert([
+                    'price' => $product->price,
+                    'product_id' => $product->id,
+                    'quantity' => $quantity,
+                    'time_of_sale' => $validated['time_of_sale'] ?: now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                DB::table('sales')->insert([
+                    'product_name' => $validated['product_name'],
+                    'price' => $validated['price'],
+                    'quantity' => $validated['quantity'],
+                    'time_of_sale' => $validated['time_of_sale'] ?: now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
 
-            DB::table('sales')->insert([
-                'product_id' => $request->input('product_id'),
-                'quantity' => $request->input('quantity'),
-                'time_of_sale' => $request->input('time_of_sale') ?: now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            $product->decrementStock($request->input('quantity'));
-
             return redirect()->back()->with('success', 'Продажа добавлена успешно!');
-            });
+        });
 
         return $response;
     }
@@ -86,23 +122,39 @@ class SaleController extends Controller
 
         try {
             $sale = DB::table('sales')->where('id', $saleId)->first();
+
             if (!$sale) {
                 return redirect()->back()->with('error', 'Продажа не найдена.');
             }
-            $product = Product::findOrFail($sale->product_id);
+            if (!is_null($sale->product_id)) {
+                $product = Product::find($sale->product_id);
+                $quantity = $sale->quantity;
 
-            $product->incrementStock($sale->quantity);
+
+                if ($product->set) {
+                    foreach ($product->set->items as $setItem) {
+                        if ($setItem->product_id) {
+                            $setItem->product->incrementStock($setItem->quantity * $quantity);
+                        }
+                    }
+                    $product->incrementStock($quantity);
+                } else {
+                    if ($product) {
+                        $product->incrementStock($quantity);
+                    }
+                }
+            }
 
             DB::table('sales')->where('id', $saleId)->delete();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Продажа успешно удалена и товар возвращен на склад!');
+            return redirect()->back()->with('success', 'Продажа успешно удалена.');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            \Log::error("Ошибка при откате продажи: " . $e->getMessage());
+            \Log::error("Ошибка при удалении продажи: " . $e->getMessage());
 
-            return redirect()->back()->with('error', 'Произошла ошибка при откате продажи.');
+            return redirect()->back()->with('error', 'Произошла ошибка при удалении продажи.');
         }
     }
 }

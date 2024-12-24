@@ -18,11 +18,9 @@ class VaseController extends Controller
      */
     public function index()
     {
-        $currentPage = request()->get('page');
-
-        $perPage = ($currentPage == 1 || $currentPage === null) ? 11 : 12;
-
-        $vases = Vase::with('gypsumProduct.product')->paginate($perPage);
+        $vases = Vase::with('gypsumProduct.product')
+            ->orderBy('created_at', 'desc')
+            ->paginate(11);
         return view('products.vases.index', compact('vases'));
     }
 
@@ -40,7 +38,7 @@ class VaseController extends Controller
     public function store(Request $request)
     {
         DB::transaction(function () use ($request) {
-            $product = Product::create($request->only('price', 'cost'));
+            $product = Product::create($request->only('price', 'cost', 'in_stock', 'description'));
             if($request->hasFile('photo')){
                 $this->handlePhotos($product, $request);
             }
@@ -83,7 +81,7 @@ class VaseController extends Controller
             if($request->hasFile('photo')){
                 $this->updatePhoto($vase->gypsumProduct->product, $request->file('photo'));
             }
-            $vase->gypsumProduct->product->update($request->only('price', 'cost'));
+            $vase->gypsumProduct->product->update($request->only('price', 'cost', 'in_stock', 'description'));
             $vase->update($request->only('name', 'color', 'gypsum_weight'));
         });
         return redirect()->route('products.vases.index')->with(['success'=>'Успешно изменено']);

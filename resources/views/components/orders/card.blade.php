@@ -11,7 +11,7 @@
         <span>
             <strong class="text-white">Статус:</strong>
             <form
-                action="{{ route('orders.update', $order->id) }}"
+                action="{{ route('orders.status', $order->id) }}"
                 method="POST"
                 id="status-form-{{ $order->id }}"
                 style="display: none;"
@@ -63,8 +63,21 @@
             </tr>
             </tfoot>
         </table>
-        <p class="card-text"><strong>Дедлайн:</strong> {{ \Carbon\Carbon::parse($order->deadline_date)->format('d.m.Y') }}</p>
-        <p class="card-text"><strong>Комментарий:</strong> {{ $order->note }}</p>
+        <div class="row justify-content-between align-content-center">
+            <div class="col-11">
+                <p class="card-text"><strong>Дедлайн:</strong> {{ \Carbon\Carbon::parse($order->deadline_date)->format('d.m.Y') }}</p>
+                <p class="card-text"><strong>Комментарий:</strong> {{ $order->note }}</p>
+            </div>
+            <div class="col-1 d-flex flex-column align-items-end">
+                <a
+                    href="{{ route('orders.edit', $order->id) }}"
+                    class="text-secondary text-decoration-none mb-2"
+                    style="cursor: pointer;"
+                >
+                    Изменить
+                </a>
+            </div>
+        </div>
     </div>
     <div class="card-footer text-muted">
         Дата создания заказа: {{ \Carbon\Carbon::parse($order->order_date)->format('d.m.Y') }}

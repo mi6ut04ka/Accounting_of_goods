@@ -1,12 +1,10 @@
 @extends('layouts.products')
 
-@section('title', 'Формовые свечи')
+@section('title', 'Контейнерные свечи')
 
 @section('content')
-    <div class="row">
-        @if(request()->get('page') == 1 || !request()->has('page'))
-            <x-add-card :link="route('products.container_candles.create')"/>
-        @endif
+    <div class="row justify-content-start">
+        <x-add-card :link="route('products.container_candles.create')"/>
         @foreach($container_candles as $product)
             <x-product.card :product="$product" :route="'container_candles'"/>
         @endforeach

@@ -13,10 +13,10 @@ trait HandlesProductPhotos
      * @param \Illuminate\Database\Eloquent\Model $product
      * @param \Illuminate\Http\Request $request
      */
-    public function handlePhotos($product, Request $request)
+    public function handlePhotos($product, Request $request, string $path = 'product')
     {
         if ($request->hasFile('photo')) {
-                $this->storePhoto($product, $request->file('photo'));
+                $this->storePhoto($product, $request->file('photo'), $path);
         }
     }
 
@@ -26,13 +26,13 @@ trait HandlesProductPhotos
      * @param \Illuminate\Database\Eloquent\Model $product
      * @param UploadedFile $newPhoto
      */
-    public function updatePhoto($product, $newPhoto)
+    public function updatePhoto($product, $newPhoto, $path = 'product')
     {
         // Удалить старую фотографию
         $this->deletePhotos($product);
 
         // Сохранить новую фотографию
-        $this->storePhoto($product, $newPhoto);
+        $this->storePhoto($product, $newPhoto, $path);
     }
 
     /**
@@ -54,10 +54,10 @@ trait HandlesProductPhotos
      * @param \Illuminate\Database\Eloquent\Model $product
      * @param UploadedFile $photo
      */
-    private function storePhoto($product, $photo)
+    private function storePhoto($product, $photo, string $path)
     {
         if ($photo instanceof UploadedFile) {
-            $filename = 'products/' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            $filename = "$path/" . uniqid() . '.' . $photo->getClientOriginalExtension();
 
             Storage::disk('public')->put($filename, file_get_contents($photo));
 

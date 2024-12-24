@@ -12,8 +12,8 @@
             <x-product.inputs/>
             <x-input type="text" label="Название свечи" name="name" />
             <x-input type="number" label="Вес воска, г" name="wax_weight" />
-            <x-input type="text" label="Аромат" name="fragrance" />
-            <x-input type="number" label="Процент аромата, %" name="fragrance_percentage" />
+            <x-input type="text" label="Аромат" name="fragrance" :optional="true" />
+            <x-input type="number" label="Процент аромата, %" name="fragrance_percentage" :optional="true" />
             <button type="submit" class="btn btn-success">Создать</button>
         </form>
     </div>

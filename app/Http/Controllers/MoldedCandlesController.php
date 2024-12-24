@@ -19,11 +19,9 @@ class MoldedCandlesController extends Controller
      */
     public function index(): View
     {
-        $currentPage = request()->get('page');
-
-        $perPage = ($currentPage == 1 || $currentPage === null) ? 11 : 12;
-
-        $molded_candles = MoldedCandle::with('candle.product')->paginate($perPage);
+        $molded_candles = MoldedCandle::with('candle.product')
+            ->orderBy('created_at', 'desc')
+            ->paginate(11);
 
         return view('products.molded_candles.index', compact('molded_candles'));
     }
@@ -44,7 +42,7 @@ class MoldedCandlesController extends Controller
     {
 
         DB::transaction(function () use ($request) {
-            $product = Product::create($request->only(['price', 'cost']));
+            $product = Product::create($request->only(['price', 'cost', 'in_stock', 'description']));
             if($request->hasFile('photo')){
                 $this->handlePhotos($product, $request);
             }
@@ -87,7 +85,7 @@ class MoldedCandlesController extends Controller
             if($request->hasFile('photo')){
                 $this->updatePhoto($molded->candle->product, $request->file('photo'));
             }
-            $molded->candle->product->update($request->only(['price', 'cost']));
+            $molded->candle->product->update($request->only(['price', 'cost', 'in_stock', 'description']));
             $molded->update($request->only([
                 'name',
                 'wax_weight',

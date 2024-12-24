@@ -18,11 +18,9 @@ class ContainerCandlesController extends Controller
 
     public function index()
     {
-        $currentPage = request()->get('page');
-
-        $perPage = ($currentPage == 1 || $currentPage === null) ? 11 : 12;
-
-        $container_candles = ContainerCandle::with('candle.product')->paginate($perPage);
+        $container_candles = ContainerCandle::with('candle.product')
+            ->orderBy('created_at', 'desc')
+            ->paginate(11);
 
         return view('products.container_candles.index', compact('container_candles'));
     }
@@ -40,9 +38,8 @@ class ContainerCandlesController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-
         DB::transaction(function () use ($request) {
-            $product = Product::create($request->only(['price', 'cost']));
+            $product = Product::create($request->only(['price', 'cost', 'in_stock', 'description']));
 
             if($request->hasFile('photo')){
                 $this->handlePhotos($product, $request);
@@ -60,6 +57,7 @@ class ContainerCandlesController extends Controller
                 'type_of_wax',
             ]));
         });
+
 
         return redirect()->route('products.container_candles.index')->with('success', 'Контейнерная свеча успешно создана');
     }
@@ -94,7 +92,7 @@ class ContainerCandlesController extends Controller
             if ($request->hasFile('photo')) {
                 $this->updatePhoto($containerCandle->candle->product, $request->file('photo'));
             }
-            $containerCandle->candle->product->update($request->only(['price', 'cost']));
+            $containerCandle->candle->product->update($request->only(['price', 'cost', 'in_stock', 'description']));
             $containerCandle->update($request->only([
                 'volume',
                 'fragrance',

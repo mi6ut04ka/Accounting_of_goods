@@ -12,7 +12,7 @@ class ContainerCandle extends Model
     use HasProductAttributesCandle;
 
     protected $fillable = [
-        'candle_id', 'volume', 'fragrance', 'fragrance_percentage', 'container_color', 'box_size', 'decor_description'
+        'candle_id', 'volume', 'fragrance', 'fragrance_percentage', 'container_color', 'box_size', 'decor_description','type_of_wax'
     ];
 
     public function candle()
@@ -20,13 +20,14 @@ class ContainerCandle extends Model
         return $this->belongsTo(Candle::class);
     }
 
-    public function getFullNameAttribute()
+    public function getFullNameAttribute(): string
     {
         $_volume = (int)$this->volume;
         $volume = $_volume ? "{$_volume} мл" : "Объем не указан";
         $fragrance = $this->fragrance ? "аромат «{$this->fragrance}»" : "без аромата";
+        $color = $this->container_color;
 
-        return "{$volume}, {$fragrance}";
+        return "{$volume}, {$fragrance}, {$color}";
     }
 
 }

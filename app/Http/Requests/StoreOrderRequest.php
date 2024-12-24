@@ -10,7 +10,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'customer_name' => 'required|string|max:255',
-            'deadline_date' => 'required|date|after_or_equal:today',
+            'deadline_date' => 'required|date',
             'products' => 'required|array',
             'products.*' => 'required|exists:products,id',
             'quantities' => 'required|array',

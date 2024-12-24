@@ -11,7 +11,7 @@
             @csrf
             <x-product.inputs/>
             <x-input type="text" label="Тип подставки" name="stand_type" />
-            <x-input type="text" label="Цвет" name="color" />
+            <x-input type="text" label="Цвет" name="color" :optional="true" />
             <x-input type="number" label="Вес гипса, гр" name="gypsum_weight" />
 
             <button type="submit" class="btn btn-success">Создать</button>

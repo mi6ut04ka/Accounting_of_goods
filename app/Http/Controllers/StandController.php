@@ -17,11 +17,9 @@ class StandController extends Controller
      */
     public function index()
     {
-        $currentPage = request()->get('page');
-
-        $perPage = ($currentPage == 1 || $currentPage === null) ? 11 : 12;
-
-        $stands = Stand::with('gypsumProduct.product')->paginate($perPage);
+        $stands = Stand::with('gypsumProduct.product')
+            ->orderBy('created_at', 'desc')
+            ->paginate(11);
 
         return view('products.stands.index', compact('stands'));
     }
@@ -41,7 +39,7 @@ class StandController extends Controller
     {
 
         DB::transaction(function () use ($request) {
-           $product = Product::create($request->only('price', 'cost'));
+           $product = Product::create($request->only('price', 'cost', 'in_stock', 'description'));
             if($request->hasFile('photo')){
                 $this->handlePhotos($product, $request);
             }
@@ -82,7 +80,7 @@ class StandController extends Controller
             if($request->hasFile('photo')){
                 $this->updatePhoto($stand->gypsumProduct->product, $request->file('photo'));
             }
-           $stand->gypsumProduct->product->update($request->only('price', 'cost'));
+           $stand->gypsumProduct->product->update($request->only('price', 'cost', 'in_stock', 'description'));
            $stand->update($request->only('stand_type', 'color', 'gypsum_weight'));
         });
         return redirect()->route('products.stands.index')->with(['success'=>'Успешно изменено']);

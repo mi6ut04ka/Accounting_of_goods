@@ -5,23 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Product extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'name', 'price', 'cost', 'in_stock'
+        'price', 'cost', 'in_stock', 'description'
     ];
 
-    public function candle()
+    public function candle(): HasOne
     {
         return $this->hasOne(Candle::class);
     }
 
-    public function gypsumProduct()
+    public function gypsumProduct(): HasOne
     {
         return $this->hasOne(GypsumProduct::class);
+    }
+
+    public function set(): HasOne
+    {
+        return $this->hasOne(Set::class);
     }
 
     public function photos()
@@ -32,6 +38,11 @@ class Product extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class, 'product_id', 'id');
     }
 
     public function orders(): BelongsToMany
@@ -52,6 +63,10 @@ class Product extends Model
             if ($this->candle->containerCandle) {
                 return $this->candle->containerCandle->full_name;
             }
+        }
+
+        if ($this->set){
+            return $this->set->name;
         }
 
         if ($this->gypsumProduct) {
@@ -80,4 +95,52 @@ class Product extends Model
     {
         $this->increment('in_stock', $quantity);
     }
+    public function getSpecificAttributesAttribute()
+    {
+        if ($this->candle) {
+            if ($this->candle->containerCandle) {
+                return [
+                    'Объем' => "{$this->candle->containerCandle->volume} мл",
+                    'Аромат' => $this->candle->containerCandle->fragrance ?: 'Без аромата',
+                    'Цвет контейнера' => $this->candle->containerCandle->container_color ?: 'Не указан',
+                    'Тип воска' => $this->candle->containerCandle->type_of_wax ?: 'Не указан',
+                ];
+            }
+
+            if ($this->candle->moldedCandle) {
+                return [
+                    'Вес воска' => "{$this->candle->moldedCandle->wax_weight} г",
+                    'Аромат' => $this->candle->moldedCandle->fragrance ?: 'Без аромата',
+                    'Название' => $this->candle->moldedCandle->name ?: 'Без названия',
+                ];
+            }
+        }
+        if ($this->gypsumProduct) {
+            if ($this->gypsumProduct->stand) {
+                return [
+                    'Тип подставки' => $this->gypsumProduct->stand->stand_type ?: 'Без типа',
+                    'Цвет' => $this->gypsumProduct->stand->color ?: 'Не указан',
+                    'Вес гипса' => "{$this->gypsumProduct->stand->gypsum_weight} г",
+                ];
+            }
+
+            if ($this->gypsumProduct->vase) {
+                return [
+                    'Название' => $this->gypsumProduct->vase->name ?: 'Без названия',
+                    'Цвет' => $this->gypsumProduct->vase->color ?: 'Не указан',
+                    'Вес гипса' => "{$this->gypsumProduct->vase->gypsum_weight} г",
+                ];
+            }
+
+            if ($this->gypsumProduct->statue) {
+                return [
+                    'Тип статуи' => $this->gypsumProduct->statue->statue_type ?: 'Без типа',
+                    'Цвет' => $this->gypsumProduct->statue->color ?: 'Не указан',
+                    'Вес гипса' => "{$this->gypsumProduct->statue->gypsum_weight} г",
+                ];
+            }
+        }
+        return ['Сообщение' => 'Нет данных для отображения'];
+    }
+
 }
