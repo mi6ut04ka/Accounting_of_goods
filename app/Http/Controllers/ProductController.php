@@ -81,8 +81,15 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        $product = Product::findorfail($id);
-        $product->set? $product->with('items'): '';
+        $product = Product::with([
+            'candle.containerCandle',
+            'candle.moldedCandle',
+            'gypsumProduct.stand',
+            'gypsumProduct.vase',
+            'gypsumProduct.statue',
+            'set.items',
+        ])->findOrFail($id);
+
         return view('products.show', compact('product'));
     }
 

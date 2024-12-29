@@ -20,6 +20,7 @@ Route::group(['middleware' => ['guest']], function () {
 });
 
 Route::group(['middleware' => ['auth']], function () {
+
     Route::redirect('/', 'products/molded_candles');
     Route::post('/products/{id}/update-stock', [ProductController::class, 'updateStock']);
     Route::patch('/orders/{id}/update-status', [OrderController::class, 'updateStatus'])->name('orders.status');

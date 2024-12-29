@@ -27,7 +27,10 @@ class StatisticController extends Controller
             $sales->where('time_of_sale', '<=', Carbon::parse($endDate)->endOfDay());
         }
 
-        $sales = $sales->orderBy('time_of_sale', 'desc')->get();
+        $sales = $sales
+            ->orderBy('time_of_sale', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('statistic.index', compact('sales'));
     }

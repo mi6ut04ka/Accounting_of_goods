@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     namespace App\Http\Controllers;
 
@@ -30,5 +30,11 @@
                 'email' => 'Неправильный логин или пароль.',
             ])->withInput($request->only('email'));
 
+        }
+
+        public function logout()
+        {
+            Auth::logout();
+            return redirect()->route('login');
         }
     }

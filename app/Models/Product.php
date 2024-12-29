@@ -14,6 +14,7 @@ class Product extends Model
     protected $fillable = [
         'price', 'cost', 'in_stock', 'description'
     ];
+    protected $appends = ['child_id'];
 
     public function candle(): HasOne
     {
@@ -141,6 +142,36 @@ class Product extends Model
             }
         }
         return ['Сообщение' => 'Нет данных для отображения'];
+    }
+
+    public function getChildIdAttribute()
+    {
+        if ($this->candle) {
+            if ($this->candle->containerCandle) {
+                return $this->candle->containerCandle->id;
+            }
+
+            if ($this->candle->moldedCandle) {
+                return $this->candle->moldedCandle->id;
+            }
+        }
+        if ($this->gypsumProduct) {
+            if ($this->gypsumProduct->stand) {
+                return $this->gypsumProduct->stand->id;
+            }
+
+            if ($this->gypsumProduct->vase) {
+                return $this->gypsumProduct->vase->id;
+            }
+
+            if ($this->gypsumProduct->statue) {
+                return $this->gypsumProduct->statue->id;
+            }
+        }
+
+        if ($this->set){
+            return $this->set->id;
+        }
     }
 
 }
