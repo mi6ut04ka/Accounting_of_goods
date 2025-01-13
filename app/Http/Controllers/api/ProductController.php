@@ -4,26 +4,32 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use http\Env\Request;
-use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
     public function bestsellers()
     {
+        $user = \Auth::guard('sanctum')->user();
+
+        // Получаем товары с суммой продаж и проверяем их наличие в избранном, если пользователь авторизован
         $products = Product::withSum('sales', 'quantity')
             ->orderByDesc('sales_sum_quantity')
             ->take(4)
             ->get()
-            ->map(function ($product) {
+            ->map(function ($product) use ($user) {
+
+                $isFavorite = $user && $user->favorites()->where('product_id', $product->id)->exists();
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
                     'price' => $product->price,
-                    'image' => $product->photos->first()->url?? 0,
+                    'image' => $product->photos->first()->url ?? 0,
                     'in_stock' => $product->in_stock,
+                    'favorite' => $isFavorite,
                 ];
             });
+
         return response()->json($products);
     }
 
@@ -44,9 +50,10 @@ class ProductController extends Controller
 
     public function show($id)
     {
+        $user = \Auth::guard('sanctum')->user();
         $product = Product::find($id);
-
         return response()->json([
+            'favorite' => $user->favorites()->where('product_id', $product->id)->exists(),
             'id' => $product->id,
             'name' => $product->name,
             'price' => $product->price,

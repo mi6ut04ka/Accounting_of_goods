@@ -11,6 +11,7 @@ class SetController extends Controller
 {
     public function index(Request $request)
     {
+        $user = \Auth::guard('sanctum')->user();
         $priceFrom = $request->input('priceFrom');
         $priceTo = $request->input('priceTo');
         $inStock = $request->input('inStock');
@@ -34,10 +35,11 @@ class SetController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
-        $modifiedData = $query->getCollection()->map(function ($set) {
+        $modifiedData = $query->getCollection()->map(function ($set) use ($user) {
             $product = $set->product;
-
+            $isFavorite = $user && $user->favorites()->where('product_id', $product->id)->exists();
             return [
+                'favorite' => $isFavorite,
                 'id_set' => $set->id,
                 'id' => $product->id,
                 'name' => $product->name,

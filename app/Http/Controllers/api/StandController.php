@@ -10,6 +10,7 @@ class StandController extends Controller
 {
     public function index(Request $request)
     {
+        $user = \Auth::guard('sanctum')->user();
         $priceFrom = $request->input('priceFrom');
         $priceTo = $request->input('priceTo');
         $inStock = $request->input('inStock');
@@ -42,10 +43,11 @@ class StandController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
-        $modifiedData = $query->getCollection()->map(function ($stand) {
+        $modifiedData = $query->getCollection()->map(function ($stand) use ($user) {
             $product = $stand->gypsumProduct->product;
-
+            $isFavorite = $user && $user->favorites()->where('product_id', $product->id)->exists();
             return [
+                'favorite' => $isFavorite,
                 'id_stand' => $stand->id,
                 'id' => $product->id,
                 'name' => $product->name,

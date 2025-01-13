@@ -1,9 +1,9 @@
 <?php
 
 use App\Http\Controllers\api\AuthController;
-
 use App\Http\Controllers\api\CartItemController;
 use App\Http\Controllers\api\ContainerCandleController;
+use App\Http\Controllers\api\FavoritesItemController;
 use App\Http\Controllers\api\ImageController;
 use App\Http\Controllers\api\MoldedCandleController;
 use App\Http\Controllers\api\ProductController;
@@ -34,6 +34,12 @@ Route::prefix('cart')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/add', [CartItemController::class, 'store']);
     Route::delete('/remove/{id}', [CartItemController::class, 'destroy']);
     Route::patch('/update', [CartItemController::class, 'update']);
+});
+
+Route::prefix('favorites')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/', [FavoritesItemController::class, 'index']);
+    Route::post('/add', [FavoritesItemController::class, 'store']);
+    Route::delete('/remove/{id}', [FavoritesItemController::class, 'destroy']);
 });
 
 Route::prefix('user')->middleware(['auth:sanctum'])->group(function () {

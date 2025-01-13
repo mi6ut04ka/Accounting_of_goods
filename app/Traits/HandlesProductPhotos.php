@@ -4,6 +4,8 @@ namespace App\Traits;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Encoders\AutoEncoder;
+use Intervention\Image\ImageManager;
 
 trait HandlesProductPhotos
 {
@@ -57,9 +59,16 @@ trait HandlesProductPhotos
     private function storePhoto($product, $photo, string $path)
     {
         if ($photo instanceof UploadedFile) {
-            $filename = "$path/" . uniqid() . '.' . $photo->getClientOriginalExtension();
+            $manager = ImageManager::gd();
+            $image = $manager->read($photo->getPathname());
 
-            Storage::disk('public')->put($filename, file_get_contents($photo));
+            $image->scale(env('PHOTO_WIDTH', 600));
+
+            $imageData = $image->encode(new AutoEncoder(quality: env('PHOTO_QUALITY', 100)));
+
+            $filename = "$path/" . uniqid() . '.jpg';
+
+            Storage::disk('public')->put($filename, $imageData);
 
             $product->photos()->create([
                 'url' => $filename,

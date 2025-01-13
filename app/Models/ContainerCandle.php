@@ -27,7 +27,7 @@ class ContainerCandle extends Model
         $fragrance = $this->fragrance ? "аромат «{$this->fragrance}»" : "без аромата";
         $color = $this->container_color;
 
-        return "{$volume}, {$fragrance}, {$color}";
+        return "АРОМАТИЧЕСКАЯ СВЕЧА, {$fragrance}, {$volume}, {$color}";
     }
 
 }

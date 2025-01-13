@@ -10,6 +10,7 @@ class ContainerCandleController extends Controller
 {
     public function index(Request $request)
     {
+        $user = \Auth::guard('sanctum')->user();
         $priceFrom = $request->input('priceFrom');
         $priceTo = $request->input('priceTo');
         $inStock = $request->input('inStock');
@@ -45,10 +46,11 @@ class ContainerCandleController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
-        $modifiedData = $query->getCollection()->map(function ($containerCandle) {
+        $modifiedData = $query->getCollection()->map(function ($containerCandle) use ($user) {
             $product = $containerCandle->candle->product;
-
+            $isFavorite = $user && $user->favorites()->where('product_id', $product->id)->exists();
             return [
+                'favorite' => $isFavorite,
                 'id_container' => $containerCandle->id,
                 'id' => $product->id,
                 'name' => $product->name,

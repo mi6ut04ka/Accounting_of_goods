@@ -11,6 +11,7 @@ class StatuetteController extends Controller
 {
     public function index(Request $request)
     {
+        $user = \Auth::guard('sanctum')->user();
         $priceFrom = $request->input('priceFrom');
         $priceTo = $request->input('priceTo');
         $inStock = $request->input('inStock');
@@ -43,10 +44,12 @@ class StatuetteController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
-        $modifiedData = $query->getCollection()->map(function ($statuette) {
+        $modifiedData = $query->getCollection()->map(function ($statuette) use ($user) {
             $product = $statuette->gypsumProduct->product;
+            $isFavorite = $user && $user->favorites()->where('product_id', $product->id)->exists();
 
             return [
+                'favorite' => $isFavorite,
                 'id_statuette' => $statuette->id,
                 'id' => $product->id,
                 'name' => $product->name,

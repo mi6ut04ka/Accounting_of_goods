@@ -10,6 +10,7 @@ class VaseController extends Controller
 {
     public function index(Request $request)
     {
+        $user = \Auth::guard('sanctum')->user();
         $priceFrom = $request->input('priceFrom');
         $priceTo = $request->input('priceTo');
         $inStock = $request->input('inStock');
@@ -38,10 +39,12 @@ class VaseController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
-        $modifiedData = $query->getCollection()->map(function ($vase) {
+        $modifiedData = $query->getCollection()->map(function ($vase) use ($user) {
             $product = $vase->gypsumProduct->product;
+            $isFavorite = $user && $user->favorites()->where('product_id', $product->id)->exists();
 
             return [
+                'favorite' => $isFavorite,
                 'id_vase' => $vase->id,
                 'id' => $product->id,
                 'name' => $product->name,
