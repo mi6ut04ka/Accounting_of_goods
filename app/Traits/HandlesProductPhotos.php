@@ -1,6 +1,7 @@
 <?php
 namespace App\Traits;
 
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,24 +18,26 @@ trait HandlesProductPhotos
      */
     public function handlePhotos($product, Request $request, string $path = 'product')
     {
-        if ($request->hasFile('photo')) {
-                $this->storePhoto($product, $request->file('photo'), $path);
+        if ($request->hasFile('photos')) {
+            $photos = $request->file('photos');
+            foreach ($photos as $index => $photo) {
+                $isPrimary = $index === 0 && !$product->photos()->exists();
+                $this->storePhoto($product, $photo, $path, $isPrimary);
+            }
         }
     }
 
     /**
-     * Изменить фотографию продукта: удалить старую и добавить новую.
+     * Обновить основное фото продукта.
      *
      * @param \Illuminate\Database\Eloquent\Model $product
      * @param UploadedFile $newPhoto
      */
-    public function updatePhoto($product, $newPhoto, $path = 'product')
+    public function updatePrimaryPhoto($product, $newPhoto, string $path = 'product')
     {
-        // Удалить старую фотографию
-        $this->deletePhotos($product);
+        $product->photos()->update(['is_primary' => false]);
 
-        // Сохранить новую фотографию
-        $this->storePhoto($product, $newPhoto, $path);
+        $this->storePhoto($product, $newPhoto, $path, true);
     }
 
     /**
@@ -45,7 +48,7 @@ trait HandlesProductPhotos
     public function deletePhotos($product)
     {
         foreach ($product->photos as $photo) {
-            Storage::disk('public')->delete($photo->url);
+            Storage::disk('s3')->delete($photo->url);
             $photo->delete();
         }
     }
@@ -55,23 +58,28 @@ trait HandlesProductPhotos
      *
      * @param \Illuminate\Database\Eloquent\Model $product
      * @param UploadedFile $photo
+     * @param bool $isPrimary
      */
-    private function storePhoto($product, $photo, string $path)
+    private function storePhoto($product, $photo, string $path, bool $isPrimary = false)
     {
         if ($photo instanceof UploadedFile) {
             $manager = ImageManager::gd();
             $image = $manager->read($photo->getPathname());
 
-            $image->scale(env('PHOTO_WIDTH', 600));
-
-            $imageData = $image->encode(new AutoEncoder(quality: env('PHOTO_QUALITY', 100)));
+            $image->scale((int)env('PHOTO_WIDTH', 600));
+            $imageData = $image->encode(new AutoEncoder(quality: (int)env('PHOTO_QUALITY', 100)));
 
             $filename = "$path/" . uniqid() . '.jpg';
 
-            Storage::disk('public')->put($filename, $imageData);
+            try {
+                Storage::disk('s3')->put($filename, $imageData);
+            } catch (Exception $e) {
+                throw new Exception('Ошибка при загрузке на S3: ' . $e->getMessage());
+            }
 
             $product->photos()->create([
                 'url' => $filename,
+                'is_primary' => $isPrimary,
             ]);
         } else {
             throw new \Exception('Невалидный файл');

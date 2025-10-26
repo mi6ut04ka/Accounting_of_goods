@@ -5,7 +5,7 @@
 @section('content')
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center">
-            <h1 class="mt-4 mb-4">{{$set->product->name}}</h1>
+            <h1 class="mt-4 mb-4">{{$set->name}}</h1>
             <form action="{{route('products.sets.destroy', $set->id)}}" method="POST">
                 @csrf
                 @method('DELETE')
@@ -18,21 +18,21 @@
             @method('PUT')
 
             <x-input name="name" label="Название набора" :value="$set->name" type="text"/>
-            <x-input name="price" label="Цена набора" :value="$set->product->price" type="number"/>
-            <x-input name="in_stock" label="Количество" :value="$set->product->in_stock" type="number"/>
-            <x-input name="description" label="Описание" :value="$set->product->description" type="text"/>
+            <x-input name="price" label="Цена набора" :value="$set->price" type="number"/>
+            <x-input name="in_stock" label="Количество" :value="$set->in_stock" type="number"/>
+            <x-input name="description" label="Описание" :value="$set->description" type="text"/>
             <x-photo-input/>
 
             <h3>Элементы набора</h3>
             <div id="set-items-container">
-                @foreach($set->items as $index => $item)
+                @foreach($set->setItems as $index => $item)
                     <div class="set-item row mb-3">
                         <div class="col-md-3">
                             <label>Продукт</label>
-                            <select name="items[{{ $index }}][product_id]" {{!$item->product_id ? 'disabled' : ''}} class="form-control product-select">
+                            <select name="items[{{ $index }}][product_id]" {{!$item->contained_product_id ? 'disabled' : ''}} class="form-control product-select">
                                 <option value="">Выберите продукт</option>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->id }}" {{ $product->id == $item->product_id ? 'selected' : '' }}>
+                                    <option value="{{ $product->id }}" {{ $product->id == $item->contained_product_id ? 'selected' : '' }}>
                                         {{ $product->name }}
                                     </option>
                                 @endforeach
@@ -41,12 +41,12 @@
                         <div class="col-md-3">
                             <label>Название (для стороннего)</label>
                             <input type="text" name="items[{{ $index }}][name]" class="form-control name-input"
-                                   value="{{ $item->product_id ? '' : $item->name }}" {{ $item->product_id ? 'disabled' : '' }}>
+                                   value="{{ $item->contained_product_id ? '' : $item->name }}" {{ $item->contained_product_id ? 'disabled' : '' }}>
                         </div>
                         <div class="col-md-2">
                             <label>Стоимость</label>
                             <input type="number" name="items[{{ $index }}][cost]" class="form-control cost-input"
-                                   value="{{ $item->cost }}" {{ $item->product_id ? 'disabled' : '' }}>
+                                   value="{{ $item->cost }}" {{ $item->contained_product_id ? 'disabled' : '' }}>
                         </div>
                         <div class="col-md-2">
                             <label>Количество</label>
@@ -85,7 +85,7 @@
             <input type="text" name="items[${index}][name]" class="form-control name-input">
                 </div>
                 <div class="col-md-2">
-                    <label>Цена</label>
+                    <label>Стоимость</label>
                     <input type="number" name="items[${index}][cost]" class="form-control cost-input">
                 </div>
                 <div class="col-md-2">

@@ -7,7 +7,7 @@
         <h1 class="mb-4">Наборы продуктов</h1>
 
         <div class="text-end">
-            <a href="{{ route('products.sets.create') }}" class="btn btn-success mb-4">Добавить набор</a>
+            <a href="{{ route('products.create', ['category' => request('category')])}}" class="btn btn-success mb-4">Добавить набор</a>
         </div>
 
         @if($sets->count())
@@ -16,9 +16,9 @@
                     <div class="col">
                         <div class="card shadow-sm h-100">
                             <div class="card-img-top text-center bg-light p-3">
-                                @if ($set->product->photos->isNotEmpty())
+                                @if ($set->photos->isNotEmpty())
                                     <img
-                                        src="{{ asset('storage/' . $set->product->photos->first()->url) }}"
+                                        src="{{ asset('https://s3.regru.cloud/aromosa/' . $set->photos->first()->url) }}"
                                         alt="Фото набора"
                                         class="img-fluid rounded"
                                         style="max-height: 200px; object-fit: contain;">
@@ -31,16 +31,17 @@
                                 @endif
                             </div>
                             <div class="card-body d-flex flex-column">
-                                <h5 class="card-title text-primary">{{ $set->product->name }}</h5>
-                                <p class="card-text mb-2"><strong>Цена набора:</strong> {{ number_format($set->product->price, 2, ',', ' ') }} руб.</p>
-                                <p class="card-text mb-2"><strong>Себестоимость:</strong> {{ number_format($set->product->cost, 2, ',', ' ') }} руб.</p>
-                                <p class="card-text"><strong>Товаров в наличии:</strong> {{ $set->product->in_stock }}</p>
-                                <p class="card-text"><strong>Количество товаров:</strong> {{ $set->items->count() }}</p>
+                                <h5 class="card-title text-primary">{{ $set->name }}</h5>
+                                <p class="card-text mb-2"><strong>Цена набора:</strong> {{ number_format($set->price, 2, ',', ' ') }} руб.</p>
+                                <p class="card-text mb-2"><strong>Себестоимость:</strong> {{ number_format($set->cost, 2, ',', ' ') }} руб.</p>
+                                <p class="card-text"><strong>Товаров в наличии:</strong> {{ $set->in_stock }}</p>
+                                <p class="card-text"><strong>Количество товаров:</strong> {{ $set->setItems->count() }}</p>
+                                <p class="card-text"><strong>Описание:</strong> {{ $set->description }}</p>
 
-                                @if($set->items->count())
+                                @if($set->setItems->count())
                                     <h6 class="mt-3">Товары в наборе:</h6>
                                     <ul class="list-group list-group-flush">
-                                        @foreach($set->items as $item)
+                                        @foreach($set->setItems as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
                                                 <span class="text-truncate" style="max-width: 150px;">
                                                     {{ $item->name ?? 'Без названия' }}
@@ -59,12 +60,12 @@
                                     <button
                                         class="btn btn-secondary"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#sold-modal-{{ $set->product->id }}">
+                                        data-bs-target="#sold-modal-{{ $set->id }}">
                                         Продано
                                     </button>
                                     <x-modalSold
-                                        id="sold-modal-{{ $set->product->id }}"
-                                        :id_product="$set->product->id">
+                                        id="sold-modal-{{ $set->id }}"
+                                        :id_product="$set->id">
                                     </x-modalSold>
                                 </div>
                             </div>

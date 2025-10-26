@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -12,23 +13,31 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'price', 'cost', 'in_stock', 'description'
+        'price', 'cost', 'in_stock', 'description','name', 'category_id', 'aroma_id'
     ];
-    protected $appends = ['child_id'];
 
-    public function candle(): HasOne
+    protected $hidden = ['cost'];
+
+    public function aromas(): BelongsToMany
     {
-        return $this->hasOne(Candle::class);
+        return $this->belongsToMany(Aroma::class)
+            ->withPivot('in_stock')
+            ->withTimestamps();
     }
 
-    public function gypsumProduct(): HasOne
+    public function category()
     {
-        return $this->hasOne(GypsumProduct::class);
+        return $this->belongsTo(Category::class);
     }
 
-    public function set(): HasOne
+    public function attributeValues()
     {
-        return $this->hasOne(Set::class);
+        return $this->hasMany(ProductAttributeValue::class);
+    }
+
+    public function setItems()
+    {
+        return $this->hasMany(SetItem::class);
     }
 
     public function photos()
@@ -52,38 +61,6 @@ class Product extends Model
             ->withPivot('quantity', 'price')
             ->withTimestamps();
     }
-
-    public function getNameAttribute()
-    {
-        if ($this->candle) {
-
-            if ($this->candle->moldedCandle) {
-                return $this->candle->moldedCandle->full_name;
-            }
-
-            if ($this->candle->containerCandle) {
-                return $this->candle->containerCandle->full_name;
-            }
-        }
-
-        if ($this->set){
-            return $this->set->name;
-        }
-
-        if ($this->gypsumProduct) {
-            if ($this->gypsumProduct->stand) {
-                return $this->gypsumProduct->stand->full_name;
-            }
-
-            if ($this->gypsumProduct->vase) {
-                return $this->gypsumProduct->vase->full_name;
-            }
-
-            if ($this->gypsumProduct->statue) {
-                return $this->gypsumProduct->statue->full_name;
-            }
-        }
-    }
     public function decrementStock(int $quantity)
     {
         if ($this->in_stock < $quantity) {
@@ -96,82 +73,4 @@ class Product extends Model
     {
         $this->increment('in_stock', $quantity);
     }
-    public function getSpecificAttributesAttribute()
-    {
-        if ($this->candle) {
-            if ($this->candle->containerCandle) {
-                return [
-                    'Объем' => "{$this->candle->containerCandle->volume} мл",
-                    'Аромат' => $this->candle->containerCandle->fragrance ?: 'Без аромата',
-                    'Цвет контейнера' => $this->candle->containerCandle->container_color ?: 'Не указан',
-                    'Тип воска' => $this->candle->containerCandle->type_of_wax ?: 'Не указан',
-                ];
-            }
-
-            if ($this->candle->moldedCandle) {
-                return [
-                    'Вес воска' => "{$this->candle->moldedCandle->wax_weight} г",
-                    'Аромат' => $this->candle->moldedCandle->fragrance ?: 'Без аромата',
-                    'Название' => $this->candle->moldedCandle->name ?: 'Без названия',
-                ];
-            }
-        }
-        if ($this->gypsumProduct) {
-            if ($this->gypsumProduct->stand) {
-                return [
-                    'Тип подставки' => $this->gypsumProduct->stand->stand_type ?: 'Без типа',
-                    'Цвет' => $this->gypsumProduct->stand->color ?: 'Не указан',
-                    'Вес гипса' => "{$this->gypsumProduct->stand->gypsum_weight} г",
-                ];
-            }
-
-            if ($this->gypsumProduct->vase) {
-                return [
-                    'Название' => $this->gypsumProduct->vase->name ?: 'Без названия',
-                    'Цвет' => $this->gypsumProduct->vase->color ?: 'Не указан',
-                    'Вес гипса' => "{$this->gypsumProduct->vase->gypsum_weight} г",
-                ];
-            }
-
-            if ($this->gypsumProduct->statue) {
-                return [
-                    'Тип статуи' => $this->gypsumProduct->statue->statue_type ?: 'Без типа',
-                    'Цвет' => $this->gypsumProduct->statue->color ?: 'Не указан',
-                    'Вес гипса' => "{$this->gypsumProduct->statue->gypsum_weight} г",
-                ];
-            }
-        }
-        return ['Сообщение' => 'Нет данных для отображения'];
-    }
-
-    public function getChildIdAttribute()
-    {
-        if ($this->candle) {
-            if ($this->candle->containerCandle) {
-                return $this->candle->containerCandle->id;
-            }
-
-            if ($this->candle->moldedCandle) {
-                return $this->candle->moldedCandle->id;
-            }
-        }
-        if ($this->gypsumProduct) {
-            if ($this->gypsumProduct->stand) {
-                return $this->gypsumProduct->stand->id;
-            }
-
-            if ($this->gypsumProduct->vase) {
-                return $this->gypsumProduct->vase->id;
-            }
-
-            if ($this->gypsumProduct->statue) {
-                return $this->gypsumProduct->statue->id;
-            }
-        }
-
-        if ($this->set){
-            return $this->set->id;
-        }
-    }
-
 }

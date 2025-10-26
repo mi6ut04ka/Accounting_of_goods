@@ -61,22 +61,22 @@ class OrderService
             foreach ($order->products as $product) {
                 $orderQuantity = $product->pivot->quantity;
 
-                if ($product->set) {
-                    foreach ($product->set->items as $setItem) {
-                        if ($setItem->product_id) {
-                            $itemStock = $setItem->product->in_stock;
+                if ($product->category->is_set) {
+                    foreach ($product->setItems as $setItem) {
+                        if ($setItem->contained_product_id) {
+                            $itemStock = $setItem->containedProduct->in_stock;
                             $requiredQuantity = $setItem->quantity * $orderQuantity;
 
                             if ($itemStock < $requiredQuantity) {
                                 throw new \RuntimeException(
-                                    "Недостаточно товара '{$setItem->product->name}' в наборе '{$product->name}'."
+                                    "Недостаточно товара '{$setItem->containedProduct->name}' в наборе '{$product->name}'."
                                 );
                             }
                         }
                     }
                 }
 
-                if (!$product->set && $product->in_stock < $orderQuantity) {
+                if (!$product->category->is_set && $product->in_stock < $orderQuantity) {
                     throw new \RuntimeException("Недостаточно товара '{$product->name}' на складе.");
                 }
             }
@@ -91,10 +91,10 @@ class OrderService
                 if ($oldStatus === 'issued' && $newStatus !== 'issued') {
                     Sale::where('order_id', $order->id)->where('product_id', $product->id)->delete();
 
-                    if ($product->set) {
-                        foreach ($product->set->items as $setItem) {
-                            if ($setItem->product_id) {
-                                $setItem->product->incrementStock($setItem->quantity * $quantity);
+                    if ($product->category->is_set) {
+                        foreach ($product->setItems as $setItem) {
+                            if ($setItem->contained_product_id) {
+                                $setItem->containedProduct->incrementStock($setItem->quantity * $quantity);
                             }
                         }
                     }
@@ -107,10 +107,10 @@ class OrderService
                         'price' => $product->price,
                         'time_of_sale' => now(),
                     ]);
-                    if ($product->set) {
-                        foreach ($product->set->items as $setItem) {
-                            if ($setItem->product_id) {
-                                $setItem->product->decrementStock($setItem->quantity * $quantity);
+                    if ($product->category->is_set) {
+                        foreach ($product->setItems as $setItem) {
+                            if ($setItem->contained_product_id) {
+                                $setItem->containedProduct->decrementStock($setItem->quantity * $quantity);
                             }
                         }
                     }

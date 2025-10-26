@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Raw;
+use App\Models\ProductAttribute;
 use App\Traits\HandlesPhoto;
-use App\Traits\HandlesRawPhotos;
 use Illuminate\Http\Request;
 
 class RawController extends Controller
 {
     use HandlesPhoto;
+
     /**
      * Display a listing of the resource.
      */
@@ -22,8 +24,8 @@ class RawController extends Controller
             $query->where('name', 'LIKE', "%{$search}%");
         }
 
-        $raws = $query->with(['attributes', 'photo'])->orderBy('created_at', 'desc')->get();
-        return view('raw.index', compact('raws'));
+        $raws = $query->with('category')->get()->groupBy('category.name');
+        return view('raws.index', compact('raws'));
     }
 
     /**
@@ -31,7 +33,8 @@ class RawController extends Controller
      */
     public function create()
     {
-        return view('raw.create');
+        $categories = Category::where('type', 'raw_material')->pluck('name', 'id');
+        return view('raws.create', compact('categories'));
     }
 
     /**
@@ -43,48 +46,35 @@ class RawController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'link' => 'nullable|url',
-            'keys' => 'nullable|array',
-            'values' => 'nullable|array',
-            'keys.*' => 'required_with:values.*|string|max:255',
-            'values.*' => 'required_with:keys.*|string|max:255',
+            'category_id' => 'required|exists:categories,id',
             'photo' => 'nullable|file',
+            'attributes' => 'nullable|array',
+            'attributes.*' => 'nullable|string|max:255'
         ]);
 
         $raw = Raw::create([
             'name' => $validated['name'],
             'price' => $validated['price'],
-            'link' => $validated['link'],
+            'link' => $validated['link'] ?? null,
+            'category_id' => $validated['category_id'],
         ]);
 
-        if($request->hasFile('photo')){
+        if ($request->hasFile('photo')) {
             $this->handlePhoto($raw, $request, 'raws');
         }
 
-        $attributes = [];
-
-        if (!empty($validated['keys']) && !empty($validated['values'])) {
-            foreach ($validated['keys'] as $index => $key) {
-                if (!empty($key) && isset($validated['values'][$index])) {
-                    $attributes[] = [
-                        'key' => $key,
-                        'value' => $validated['values'][$index],
-                    ];
-                }
+        if (!empty($validated['attributes'])) {
+            $attributes = [];
+            foreach ($validated['attributes'] as $attributeId => $value) {
+                $attributes[] = [
+                    'attribute_id' => $attributeId,
+                    'value' => $value
+                ];
             }
-        }
-        if (!empty($attributes)) {
-            $raw->attributes()->createMany($attributes);
+            $raw->attributeValues()->createMany($attributes);
         }
 
         return redirect()->route('raws.index')->with('success', 'Сырьё успешно добавлено.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Raw $raw)
-    {
-        //
     }
 
     /**
@@ -93,7 +83,8 @@ class RawController extends Controller
     public function edit($id)
     {
         $raw = Raw::with('attributes')->findOrFail($id);
-        return view('raw.edit', compact('raw'));
+        $categories = Category::where('type', 'raw_material')->pluck('name', 'id');
+        return view('raws.edit', compact('raw', 'categories'));
     }
 
     /**
@@ -105,38 +96,33 @@ class RawController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'link' => 'nullable|url',
-            'keys' => 'nullable|array',
-            'values' => 'nullable|array',
-            'keys.*' => 'required_with:values.*|string|max:255',
-            'values.*' => 'required_with:keys.*|string|max:255',
             'photo' => 'nullable|file',
+            'attributes' => 'nullable|array',
+            'attributes.*' => 'nullable|string|max:255'
         ]);
 
         $raw = Raw::findOrFail($id);
         $raw->update([
             'name' => $validated['name'],
             'price' => $validated['price'],
-            'link' => $validated['link'],
+            'link' => $validated['link'] ?? null,
         ]);
 
-        if($request->hasFile('photo')){
+        if ($request->hasFile('photo')) {
             $this->updatePhoto($raw, $request->file('photo'), 'raws');
         }
 
-        $raw->attributes()->delete();
-        $attributes = [];
-        if (!empty($validated['keys']) && !empty($validated['values'])) {
-            foreach ($validated['keys'] as $index => $key) {
-                if (!empty($key) && isset($validated['values'][$index])) {
-                    $attributes[] = [
-                        'key' => $key,
-                        'value' => $validated['values'][$index],
-                    ];
-                }
+        // Удаляем старые значения атрибутов и добавляем новые
+        $raw->attributeValues()->delete();
+        if (!empty($validated['attributes'])) {
+            $attributes = [];
+            foreach ($validated['attributes'] as $attributeId => $value) {
+                $attributes[] = [
+                    'attribute_id' => $attributeId,
+                    'value' => $value
+                ];
             }
-        }
-        if (!empty($attributes)) {
-            $raw->attributes()->createMany($attributes);
+            $raw->attributeValues()->createMany($attributes);
         }
 
         return redirect()->route('raws.index')->with('success', 'Сырьё успешно обновлено.');
@@ -147,11 +133,11 @@ class RawController extends Controller
      */
     public function destroy($id)
     {
-        $raw = Raw::findorfail($id);
+        $raw = Raw::findOrFail($id);
         $raw->attributes()->delete();
         $this->deletePhoto($raw);
         $raw->delete();
 
-        return redirect()->back()->with('success', 'Сырье успешно удалено');
+        return redirect()->back()->with('success', 'Сырье успешно удалено.');
     }
 }

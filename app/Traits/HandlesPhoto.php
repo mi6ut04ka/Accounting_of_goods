@@ -29,7 +29,7 @@ trait HandlesPhoto
     public function deletePhoto(Model $model): void
     {
             if($model->photo && $model->photo->url){
-                Storage::disk('public')->delete($model->photo->url);
+                Storage::disk('s3')->delete($model->photo->url);
                 $model->photo->delete();
             }
     }
@@ -45,11 +45,11 @@ trait HandlesPhoto
 
             $image->scale(env('PHOTO_WIDTH', 600));
 
-            $imageData = $image->encode(new AutoEncoder(quality: env('PHOTO_QUALITY', 100)));
+            $imageData = $image->encode(new AutoEncoder(quality: (int)env('PHOTO_QUALITY', 100)));
 
             $filename = "$path/" . uniqid() . '.jpg';
 
-            Storage::disk('public')->put($filename, $imageData);
+            Storage::disk('s3')->put($filename, $imageData);
 
             $model->photo()->create([
                 'url' => $filename,

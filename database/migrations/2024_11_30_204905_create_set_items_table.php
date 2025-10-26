@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('set_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('set_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->foreignId('contained_product_id')->nullable()->constrained('products')->onDelete('cascade');
             $table->string('name');
             $table->decimal('cost');
             $table->integer('quantity');

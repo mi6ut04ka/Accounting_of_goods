@@ -10,7 +10,7 @@ class Photo extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'url', 'raw_id', 'set_id'
+        'product_id', 'url', 'raw_id', 'set_id', 'is_primary'
     ];
 
     public function product()
@@ -20,11 +20,11 @@ class Photo extends Model
 
     public function raw()
     {
-        return $this->hasMany(Raw::class);
+        return $this->belongsTo(Raw::class);
     }
 
-    public function set()
+    public function category()
     {
-        return $this->hasMany(Set::class);
+        return $this->belongsTo(Category::class);
     }
 }

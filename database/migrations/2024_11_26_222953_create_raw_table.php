@@ -16,7 +16,10 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->string('name');
             $table->string('link')->nullable();
+            $table->unsignedBigInteger('category_id');
             $table->timestamps();
+
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
         });
     }
 

@@ -37,7 +37,7 @@
                     }
 
                     resultsContainer.innerHTML = products.map(product => `
-                        <a href="${product.id}" class="link">
+                        <a href="/products/${product.id}" class="link">
                             <li class="dropdown-item">
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">${product.name}</span>

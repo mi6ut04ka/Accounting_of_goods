@@ -7,7 +7,7 @@
         <div class="row">
             <div class="col-md-6">
                 @if($product->photos->isNotEmpty())
-                    <img src="{{ asset("storage/{$product->photos->first()->url}") }}" alt="{{ $product->name }}" class="img-fluid rounded">
+                    <img src="{{ asset("https://s3.regru.cloud/aromosa/{$product->photos->first()->url}") }}" alt="{{ $product->name }}" class="img-fluid rounded">
                 @else
                     <img src="{{ asset('images/img.png') }}" alt="Default photo" class="img-fluid rounded">
                 @endif
@@ -26,31 +26,16 @@
                     id="sold-modal-{{ $product->id }}"
                     :id_product="$product->id">
                 </x-modalSold>
-
-                <!-- Кнопка для изменения -->
-                <button class="btn btn-success">
-                    @if($product->candle && $product->candle->containerCandle)
-                        <a href="{{ route('products.container_candles.edit', $product->candle->containerCandle->id) }}" class="text-white text-decoration-none">Изменить</a>
-                    @elseif($product->candle && $product->candle->moldedCandle)
-                        <a href="{{ route('products.molded_candles.edit', $product->candle->moldedCandle->id) }}" class="text-white text-decoration-none">Изменить</a>
-                    @elseif($product->gypsumProduct && $product->gypsumProduct->stand)
-                        <a href="{{ route('products.gypsum.stands.edit', $product->gypsumProduct->stand->id) }}" class="text-white text-decoration-none">Изменить</a>
-                    @elseif($product->gypsumProduct && $product->gypsumProduct->vase)
-                        <a href="{{ route('products.gypsum.vases.edit', $product->gypsumProduct->vase->id) }}" class="text-white text-decoration-none">Изменить</a>
-                    @elseif($product->gypsumProduct && $product->gypsumProduct->statue)
-                        <a href="{{ route('products.gypsum.statues.edit', $product->gypsumProduct->statue->id) }}" class="text-white text-decoration-none">Изменить</a>
-                    @elseif($product->set)
-                        <a href="{{ route('products.sets.edit', $product->set->id) }}" class="text-white text-decoration-none">Изменить</a>
-                    @else
-                        Нет доступного маршрута для изменения
-                    @endif
-                </button>
-
-                @if($product->set)
+                    <a href="{{route('products.edit', $product->id)}}">
+                        <button class="btn btn-success">
+                            Изменить
+                        </button>
+                    </a>
+                @if($product->category->is_set)
                     <div class="mt-5">
                         <h3>Товары в наборе</h3>
                         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                            @foreach($product->set->items as $item)
+                            @foreach($product->setItems as $item)
                                 <div class="col">
                                     <div class="card h-100">
                                         <div class="card-body">
@@ -69,8 +54,8 @@
                     <div class="mt-4">
                         <h3>Характеристики</h3>
                         <ul>
-                            @foreach($product->specific_attributes as $key => $value)
-                                <li><strong>{{ $key }}:</strong> {{ $value }}</li>
+                            @foreach($product->attributeValues as $attributeValue)
+                                <li><strong>{{ $attributeValue->attribute->name }}:</strong> {{ $attributeValue->value }}</li>
                             @endforeach
                         </ul>
                     </div>

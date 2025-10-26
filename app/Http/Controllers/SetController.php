@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Set;
 use App\Models\SetItem;
@@ -12,49 +13,32 @@ use Illuminate\Support\Facades\DB;
 class SetController extends Controller
 {
     use HandlesProductPhotos;
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        $sets = Set::with(['items','product'])->orderBy('created_at', 'desc')->get();
+        $sets = Product::whereHas('category', function ($query) {
+            $query->where('is_set', true);
+        })->with(['setItems'])->orderBy('created_at', 'desc')->get();
         return view('products.sets.index', compact('sets'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $products = Product::all()->filter(function ($product) {
-            return !$product->set;
-        });
-
-        return view('products.sets.create', compact('products'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         DB::beginTransaction();
-
         try {
             $product = Product::create([
+                'name' => $request->input('name'),
+                'category_id' => $request->get('category'),
                 'price' => $request->input('price'),
-                'in_stock' => $request->input('in_stock')?? 1,
+                'in_stock' => $request->input('in_stock')?? 0,
                 'cost' => 0,
                 'description' => $request->input('description') ?? null,
-            ]);
-
-            $set = $product->set()->create([
-                'name' => $request->input('name'),
             ]);
 
             if($request->hasFile('photo')){
                 $this->handlePhotos($product, $request, 'sets');
             }
+
             $final_cost = 0;
 
             foreach ($request->input('items') as $item) {
@@ -67,8 +51,8 @@ class SetController extends Controller
                 $final_cost += $product_item? $product_item->cost*$quantity : $item['cost']*$quantity?? 0;
 
                 SetItem::create([
-                    'set_id' => $set->id,
-                    'product_id' => $productId,
+                    'product_id' => $product->id,
+                    'contained_product_id' => $productId,
                     'name' => $name,
                     'cost' => $cost,
                     'quantity' => $quantity,
@@ -77,7 +61,7 @@ class SetController extends Controller
             $product->update(['cost' => $final_cost]);
 
             DB::commit();
-            return redirect()->route('products.sets.index')->with('success', 'Набор успешно создан!');
+            return redirect()->route('products.index', ['category' => $request->input('category')])->with('success', 'Набор успешно создан!');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error("Ошибка при создании набора: " . $e->getMessage());
@@ -85,24 +69,20 @@ class SetController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Set $set)
+
+    public function show(string $category, string $product)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+
     public function edit($id)
     {
-        $set = Set::with('items')->findOrFail($id);
-        $products = Product::all()->filter(function ($product) {
-            return !$product->set;
-        });
+        $set = Product::with('setItems')->findOrFail($id);
 
+        $products = Product::whereHas('category', function ($query) {
+            $query->where('is_set', false);
+        })->get();
         return view('products.sets.edit', compact( 'set','products'));
     }
 
@@ -114,22 +94,20 @@ class SetController extends Controller
         DB::beginTransaction();
 
         try {
-            $set = Set::findOrFail($id);
-            $product = $set->product;
+            $product = Product::findOrFail($id);
             $product->update([
+                'name' => $request->input('name'),
                 'price' => $request->input('price'),
                 'in_stock' => $request->input('in_stock')?? 1,
                 'cost' => 0,
                 'description' => $request->input('description')?? null
             ]);
-            $product->set()->update([
-                'name' => $request->input('name'),
-            ]);
+
             if($request->hasFile('photo')){
                 $this->updatePhoto($product, $request->file('photo'), 'sets');
             }
 
-            $product->set->items()->delete();
+            $product->setItems()->delete();
 
             $final_cost = 0;
 
@@ -143,8 +121,8 @@ class SetController extends Controller
                 $quantity = $item['quantity'];
                 $final_cost += $product_item? $product_item->cost*$quantity : $item['cost']*$quantity?? 0;
                 SetItem::create([
-                    'set_id' => $set->id,
-                    'product_id' => $productId,
+                    'contained_product_id' => $productId,
+                    'product_id' => $product->id,
                     'name' => $name,
                     'cost' => $cost,
                     'quantity' => $quantity,

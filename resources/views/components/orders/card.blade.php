@@ -5,7 +5,7 @@
                     @case('processing')bg-secondary @break
                     @case('completed')bg-success @break
                     @case('issued')bg-info @break
-                    @case('cancelled')bg-danger @break
+                    @case('canceled')bg-danger @break
                 @endswitch">
         <span><strong>Имя заказчика:</strong> {{ $order->customer_name }}</span>
         <span>
@@ -28,7 +28,7 @@
                     <option value="processing" @if($order->order_status == 'processing') selected @endif>в процессе</option>
                     <option value="completed" @if($order->order_status == 'completed') selected @endif>выполнен</option>
                     <option value="issued" @if($order->order_status == 'issued') selected @endif>отдан</option>
-                    <option value="cancelled" @if($order->order_status == 'cancelled') selected @endif>отменен</option>
+                    <option value="canceled" @if($order->order_status == 'canceled') selected @endif>отменен</option>
                 </select>
             </form>
         </span>

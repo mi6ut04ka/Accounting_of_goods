@@ -6,7 +6,7 @@
     <div class="container mt-5">
         <h1>Создать новый набор</h1>
 
-        <form action="{{ route('products.sets.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('products.sets.store', ['category' => request('category')]) }}" method="POST" enctype="multipart/form-data">
             @csrf
             <x-input name="name" label="Название набора" type="text"/>
             <x-input name="price" label="Цена набора" type="number"/>

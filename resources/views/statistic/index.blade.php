@@ -56,7 +56,7 @@
         <tbody>
         @foreach($sales as $sale)
             <tr>
-                <td>{{ $sale->product->name?? $sale->product_name }}</td>
+                <td>{{ $sale->product_name ?? $sale->product->name}}</td>
                 <td>{{ number_format($sale->price, 2, ',', ' ') }} руб.</td>
                 <td>{{ $sale->quantity }}</td>
                 <td>{{ number_format($sale->price * $sale->quantity, 2, ',', ' ') }} руб.</td>

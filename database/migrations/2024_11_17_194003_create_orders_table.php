@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('customer_name');
             $table->date('order_date')->nullable();
             $table->date('deadline_date')->nullable();
-            $table->enum('order_status', ['pending', 'processing', 'completed','issued','cancelled'])->nullable();
+            $table->enum('order_status', ['pending', 'processing', 'completed','issued','canceled'])->nullable();
             $table->string('note')->nullable();
             $table->timestamps();
         });

@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Events\PromoCodeUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\CartItem;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Laravel\Sanctum\PersonalAccessToken;
 
 class CartItemController extends Controller
 {
@@ -16,21 +15,25 @@ class CartItemController extends Controller
      */
     public function index(Request $request)
     {
-        $user = \Auth::user();
+        $user = $request->user();
 
         $cartItems = CartItem::where('user_id', $user->id)
-            ->with(['product.photos'])
+            ->with(['product.photos', 'product.category'])
             ->get();
 
-        $modifiedData = $cartItems->map(function ($cartItem) {
+        $modifiedData = $cartItems->map(function ($cartItem) use ($user) {
             $product = $cartItem->product;
 
             return [
                 'id' => $product->id,
                 'quantity' => $cartItem->quantity,
+                'inStock' => $product->in_stock,
                 'name' => $cartItem->product_name,
+                'isFavorite' => $user->favorites()->where('product_id', $product->id)->exists(),
                 'price' => $cartItem->price,
-                'image' => $product->photos->first()->url ?? null,
+                'photos' => $product->photos,
+                'categorySlug' => $product->category?->slug,
+                'discount_price' => $cartItem->discount_price,
             ];
         });
 
@@ -47,32 +50,34 @@ class CartItemController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $user = \Auth::user();
-
-        $product = Product::find($request->product_id);
-
-        if (!$product) {
-            return response()->json(['error' => 'Товар не найден'], 404);
-        }
+        $user = $request->user();
+        $product = Product::findOrFail($request->product_id);
 
         $cartItem = CartItem::where('user_id', $user->id)
-            ->where('product_id', $request->product_id)
+            ->where('product_id', $product->id)
             ->first();
 
         if ($cartItem) {
-            $cartItem->quantity += $request->quantity;
+            $cartItem->quantity += 1;
             $cartItem->save();
         } else {
             $cartItem = CartItem::create([
                 'user_id' => $user->id,
-                'product_id' => $request->product_id,
+                'product_id' => $product->id,
                 'product_name' => $product->name,
                 'price' => $product->price,
-                'quantity' => $request->quantity,
+                'discount_price' => $product->price,
+                'quantity' => 1,
             ]);
         }
 
-        return response()->json(['message' => 'Товар добавлен в корзину', 'cartItem' => $cartItem]);
+
+        event(new PromoCodeUpdated($user));
+
+        return response()->json([
+            'message' => 'Товар добавлен в корзину',
+            'cartItem' => $cartItem,
+        ]);
     }
 
     /**
@@ -84,24 +89,25 @@ class CartItemController extends Controller
 
         $cartItem = CartItem::where('user_id', $user->id)
             ->where('product_id', $id)
-            ->first();
-
-        if (!$cartItem) {
-            return response()->json(['error' => 'Товар в корзине не найден'], 404);
-        }
+            ->firstOrFail();
 
         $cartItem->delete();
+
+        event(new PromoCodeUpdated($user));
 
         return response()->json(['message' => 'Товар удален из корзины']);
     }
 
+    /**
+     * Уменьшить количество товара в корзине (или удалить).
+     */
     public function update(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
         ]);
 
-        $user = \Auth::user();
+        $user = $request->user();
 
         $cartItem = CartItem::where('user_id', $user->id)
             ->where('product_id', $request->product_id)
@@ -110,15 +116,13 @@ class CartItemController extends Controller
         if (!$cartItem) {
             return response()->json(['error' => 'Товар в корзине не найден'], 404);
         }
-
-        $cartItem->quantity -= 1;
-
-        if ($cartItem->quantity <= 0) {
+        if ($cartItem->quantity > 1) {
+            $cartItem->decrement('quantity');
+            $cartItem->refresh();
+        } else {
             $cartItem->delete();
             return response()->json(['message' => 'Товар удален из корзины']);
         }
-
-        $cartItem->save();
 
         return response()->json([
             'message' => 'Количество товара обновлено',

@@ -2,16 +2,25 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\VerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+
+    public function sendEmailVerificationNotification()
+    {
+        Mail::to($this->email)->send(new VerifyEmail($this));
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -20,8 +29,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'surname',
         'email',
         'password',
+        'applied_promo_code_id',
+        'email_verified_at'
     ];
 
     /**
@@ -32,6 +44,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'role'
     ];
 
     /**
@@ -44,7 +57,12 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function cartItems()
+    public function appliedPromoCode()
+    {
+        return $this->belongsTo(PromoCode::class, 'applied_promo_code_id');
+    }
+
+    public function cartItems(): HasMany
     {
         return $this->hasMany(CartItem::class);
     }
@@ -58,4 +76,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(FavoritesItem::class);
     }
+
+    public function address(): HasOne
+    {
+        return $this->hasOne(Address::class);
+    }
+
+    public function phone(): HasOne
+    {
+        return $this->hasOne(Phone::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
 }

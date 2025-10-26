@@ -1,6 +1,6 @@
 <header class="bg-light shadow-sm">
     <div class="navbar navbar-expand-lg navbar-light container py-2">
-        <a class="navbar-brand fw-bold" style="font-family: 'Brilliant', sans-serif; font-size: 1.5rem;" href="{{ route('products.molded_candles.index') }}">
+        <a class="navbar-brand fw-bold" style="font-family: 'Brilliant', sans-serif; font-size: 1.5rem;" href="{{ route('categories.index') }}">
             <i class="bi bi-candle"></i> {{ config('app.name') }}
         </a>
 
@@ -11,9 +11,27 @@
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav me-auto d-flex flex-row align-items-center">
                 <li class="nav-item d-flex align-items-center">
-                    <a class="nav-link d-flex align-items-center {{ activeLink('products*') ? 'active' : '' }}" href="{{ route('products.molded_candles.index') }}">
+                    <a class="nav-link d-flex align-items-center {{ activeLink('categories*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Категории
+                    </a>
+                </li>
+                <li class="nav-item d-flex align-items-center">
+                    <a class="nav-link d-flex align-items-center {{ activeLink('products*') ? 'active' : '' }}" href="{{ route('products.index') }}">
                         <i class="bi bi-box-seam me-2"></i>
                         Продукты
+                    </a>
+                </li>
+                <li class="nav-item d-flex align-items-center">
+                    <a class="nav-link d-flex align-items-center {{ activeLink('aromas*') ? 'active' : '' }}" href="{{ route('aromas.index') }}">
+                        <i class="bi bi-droplet"></i>
+                        Ароматы
+                    </a>
+                </li>
+                <li class="nav-item d-flex align-items-center">
+                    <a class="nav-link d-flex align-items-center {{ activeLink('promo-codes*') ? 'active' : '' }}" href="{{ route('promo-codes.index') }}">
+                        <i class="bi bi-tag"></i>
+                        Промокоды
                     </a>
                 </li>
                 <li class="nav-item d-flex align-items-center">
@@ -32,6 +50,12 @@
                     <a class="nav-link d-flex align-items-center {{ activeLink('raws*') ? 'active' : '' }}" href="{{ route('raws.index') }}">
                         <i class="bi bi-box me-2"></i>
                         Сырье
+                    </a>
+                </li>
+                <li class="nav-item d-flex align-items-center">
+                    <a class="nav-link d-flex align-items-center {{ activeLink('messages*') ? 'active' : '' }}" href="{{ route('messages.index') }}">
+                        <i class="bi bi-chat me-2"></i>
+                        Сообщения
                     </a>
                 </li>
             </ul>

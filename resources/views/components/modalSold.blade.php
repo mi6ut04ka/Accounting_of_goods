@@ -1,4 +1,4 @@
-@props(['sold'=>0, 'id_product'=>0])
+@props(['sold'=>0, 'id_product'=>0, 'aromas' => []])
 <div {{ $attributes }} class="modal fade"  tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -8,6 +8,11 @@
                     <h5 class="modal-title" id="exampleModalLabel">Сколько продано</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                @if($aromas->isNotEmpty())
+                    <div class="modal-body">
+                        <x-select :label="'Выберите аромат'" :name="'aroma_id'" :options="$aromas->pluck('name', 'id')"/>
+                    </div>
+                @endif
                 <div class="modal-body">
                     <input type="hidden" name="product_id" value="{{ $id_product }}">
                     <x-input name="quantity" label="Укажите количество" type="number"/>

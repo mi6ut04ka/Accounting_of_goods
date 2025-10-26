@@ -9,11 +9,16 @@ class SetItem extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['set_id', 'product_id', 'name', 'cost', 'quantity'];
+    protected $fillable = [
+        'product_id',
+        'contained_product_id',
+        'name',
+        'cost',
+        'quantity',];
 
-    public function set()
+    public function containedProduct()
     {
-        return $this->belongsTo(Set::class);
+        return $this->belongsTo(Product::class, 'contained_product_id');
     }
 
     public function product()
